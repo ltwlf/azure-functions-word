@@ -1,0 +1,196 @@
+{
+  "swagger": "2.0",
+  "host": "cg-bss-openxmlprocessing.azurewebsites.net",
+  "basePath": "/api",
+  "info": {
+    "title": "Open XML Processor API",
+    "version": "1.0.0.0",
+    "description": "API to Process Open XML documents"
+  },
+  "tags": [
+    {
+      "name": "OpenXml"
+    }
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/ProcessWordTemplate": {
+      "post": {
+        "tags": [
+          "ProcessWordTemplate"
+        ],
+        "description": "Replace content placeholders in a word document",
+        "operationId": "ProcessWordTemplate",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "data",
+            "description": "word file as base64 string with content placeholders",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "file"
+              ],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "format": "byte"
+                },
+                "placeholders": {
+                  "type": "object",
+                  "properties": {
+                    "placeholder00Tag": {
+                      "type": "string"
+                    },
+                    "placeholder00Value": {
+                      "type": "string"
+                    },
+                    "placeholder01Tag": {
+                      "type": "string"
+                    },
+                    "placeholder01Value": {
+                      "type": "string"
+                    },
+                    "placeholder02Tag": {
+                      "type": "string"
+                    },
+                    "placeholder02Value": {
+                      "type": "string"
+                    },
+                    "placeholder03Tag": {
+                      "type": "string"
+                    },
+                    "placeholder03Value": {
+                      "type": "string"
+                    },
+                    "placeholder04Tag": {
+                      "type": "string"
+                    },
+                    "placeholder04Value": {
+                      "type": "string"
+                    },
+                    "placeholder05Tag": {
+                      "type": "string"
+                    },
+                    "placeholder05Value": {
+                      "type": "string"
+                    },
+                    "placeholder06Tag": {
+                      "type": "string"
+                    },
+                    "placeholder06Value": {
+                      "type": "string"
+                    },
+                    "placeholder07Tag": {
+                      "type": "string"
+                    },
+                    "placeholder07Value": {
+                      "type": "string"
+                    },
+                    "placeholder08Tag": {
+                      "type": "string"
+                    },
+                    "placeholder08Value": {
+                      "type": "string"
+                    },
+                    "placeholder09Tag": {
+                      "type": "string"
+                    },
+                    "placeholder09Value": {
+                      "type": "string"
+                    },
+                    "placeholder10Tag": {
+                      "type": "string"
+                    },
+                    "placeholder10Value": {
+                      "type": "string"
+                    },
+                    "placeholder11Tag": {
+                      "type": "string"
+                    },
+                    "placeholder11Value": {
+                      "type": "string"
+                    },
+                    "placeholder12Tag": {
+                      "type": "string"
+                    },
+                    "placeholder12Value": {
+                      "type": "string"
+                    },
+                    "placeholder13Tag": {
+                      "type": "string"
+                    },
+                    "placeholder13Value": {
+                      "type": "string"
+                    },
+                    "placeholder14Tag": {
+                      "type": "string"
+                    },
+                    "placeholder14Value": {
+                      "type": "string"
+                    },
+                    "placeholder15Tag": {
+                      "type": "string"
+                    },
+                    "placeholder15Value": {
+                      "type": "string"
+                    },
+                    "placeholder16Tag": {
+                      "type": "string"
+                    },
+                    "placeholder16Value": {
+                      "type": "string"
+                    },
+                    "placeholder17Tag": {
+                      "type": "string"
+                    },
+                    "placeholder17Value": {
+                      "type": "string"
+                    },
+                    "placeholder18Tag": {
+                      "type": "string"
+                    },
+                    "placeholder18Value": {
+                      "type": "string"
+                    },
+                    "placeholder19Tag": {
+                      "type": "string"
+                    },
+                    "placeholder19Value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the word document as base64 string",
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "apikeyQuery": {
+      "type": "apiKey",
+      "name": "code",
+      "in": "query"
+    }
+  }
+}
