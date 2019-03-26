@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="swagger.json" />
@@ -9,8 +10,8 @@
     <Content Include="swagger.json" />
   </ItemGroup>
   <ItemGroup>    
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.8.1" />    
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.2" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.9.1" />    
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.26" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

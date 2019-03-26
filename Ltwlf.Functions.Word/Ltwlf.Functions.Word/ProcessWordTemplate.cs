@@ -14,6 +14,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
 using Ltwlf.Functions.Word.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Ltwlf.Functions.Word
 {
@@ -21,9 +22,9 @@ namespace Ltwlf.Functions.Word
     {
 
         [FunctionName("ProcessWordTemplate")]
-        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequestMessage req, TraceWriter log)
+        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequestMessage req, ILogger log)
         {
-            log.Info("ProcessWordTemplate function is processing a request...");
+            log.LogInformation("ProcessWordTemplate function is processing a request...");
 
             string wordAsBase64 = String.Empty;
             byte[] wordAsBinary = null;
@@ -36,7 +37,7 @@ namespace Ltwlf.Functions.Word
             }
             catch (Exception ex)
             {
-                log.Info(ex.Message);
+                log.LogInformation(ex.Message);
                 return req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid data was send");
             }
 
@@ -62,7 +63,7 @@ namespace Ltwlf.Functions.Word
                         {
                             if (element != null)
                             {
-                                log.Info(String.Format("Placeholder '{0}' was found and will be replaced.", value));
+                                log.LogInformation(String.Format("Placeholder '{0}' was found and will be replaced.", value));
 
                                 element.Descendants<Run>().Skip(1).ToList().ForEach(r => r.Remove());
 
@@ -82,7 +83,7 @@ namespace Ltwlf.Functions.Word
                             }
                             else
                             {
-                                log.Info(String.Format("Placeholder '{0}' was not found.", tag));
+                                log.LogInformation(String.Format("Placeholder '{0}' was not found.", tag));
                             }
                         }
                     }
