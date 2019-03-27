@@ -6,18 +6,33 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions.Internal;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using Xunit;
 
 namespace Ltwlf.Functions.Word.Test
 {
-    public class GetContentControlsTest
+    public class GetPlaceholdersTest
     {
         [Fact]
-        public async void Should_Return_OK_Address()
+        public async void Should_Return_OK_AddressSchema()
         {
-            var expectedTags = new string[] { "Company", "Street", "City" };
+            var expectedShema = @"
+            {
+                ""type"": ""object"",
+                ""properties"": {
+                    ""Company"": {
+                        ""type"": ""string""
+                    },
+                    ""Street"": {
+                        ""type"": ""string""
+                    },
+                    ""City"": {
+                        ""type"": ""string""
+                    }
+                }
+            }";
 
             var wordAsBase64 = Convert.ToBase64String(await File.ReadAllBytesAsync("test.docx"));
 
@@ -31,8 +46,16 @@ namespace Ltwlf.Functions.Word.Test
             var response = await GetContentControls.Run(request, logger);
 
             Assert.IsType<OkObjectResult>(response);
-            Assert.Equal(expectedTags, (response as OkObjectResult).Value);
+            Assert.Equal(expectedShema.RemoveWhiteSpace(), (response as OkObjectResult).Value.ToString().RemoveWhiteSpace());
 
+        }
+    }
+
+    public static partial class Extension
+    {
+        public static string RemoveWhiteSpace(this string self)
+        {
+            return new string(self.Where(c => !char.IsWhiteSpace(c)).ToArray());
         }
     }
 }

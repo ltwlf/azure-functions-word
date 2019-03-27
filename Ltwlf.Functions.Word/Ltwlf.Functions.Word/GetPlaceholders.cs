@@ -6,6 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Schema;
 using System;
 using System.IO;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace Ltwlf.Functions.Word
     public static class GetContentControls
     {
 
-        [FunctionName("GetContentControls")]
+        [FunctionName("GetPlaceholders")]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequest req, ILogger log)
         {
             log.LogInformation("ProcessWordTemplate function is processing a request...");
@@ -60,7 +61,16 @@ namespace Ltwlf.Functions.Word
 
                     theDoc.Close();
 
-                    return new OkObjectResult(contentControls);
+                    var schema = new JSchema
+                    {
+                        Type = JSchemaType.Object
+                    };
+
+                    contentControls.ToList().ForEach(c => {
+                        schema.Properties.Add(c, new JSchema { Type = JSchemaType.String });
+                    });
+                    
+                    return new OkObjectResult(schema.ToString());
                 }
             }
         }
