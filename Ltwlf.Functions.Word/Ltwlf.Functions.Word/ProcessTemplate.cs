@@ -11,66 +11,73 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
-using Ltwlf.Functions.Word.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
+using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Ltwlf.Functions.Word
 {
+
+    [JsonObject]
+    public class ProcessTemplateMessage
+    {
+        [JsonProperty(PropertyName = "file")]
+        public string WordAsBase64 { get; set; }
+
+        [JsonProperty(PropertyName = "map")]
+        public Dictionary<string, object> Map { get; set; }
+    }
+
+
     public static class ProcessWordTemplate
     {
 
-        [FunctionName("ProcessWordTemplate")]
-        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequestMessage req, ILogger log)
+        [FunctionName("ProcessTemplate")]
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequest req, ILogger log)
         {
             log.LogInformation("ProcessWordTemplate function is processing a request...");
 
             string wordAsBase64 = String.Empty;
             byte[] wordAsBinary = null;
-            ProcessWordTemplateJson data = null;
+            ProcessTemplateMessage data = null;
 
             try
             {
-                data = await req.Content.ReadAsAsync<ProcessWordTemplateJson>();
-                wordAsBinary = Convert.FromBase64String(data.WordDocAsBase64);
+                var json = await req.ReadAsStringAsync();
+                data = JsonConvert.DeserializeObject<ProcessTemplateMessage>(json);
+                wordAsBinary = Convert.FromBase64String(data.WordAsBase64);
+
             }
             catch (Exception ex)
             {
                 log.LogInformation(ex.Message);
-                return req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid data was send");
+                return new ExceptionResult(ex, false);
             }
-
-            IList<PropertyInfo> props = new List<PropertyInfo>(typeof(Placeholders).GetProperties());
 
             using (var stream = new MemoryStream(wordAsBinary))
             {
                 using (WordprocessingDocument theDoc = WordprocessingDocument.Open(stream, true))
                 {
-                    foreach (var prop in props.Where(p => p.Name.EndsWith("Tag")))
+                    foreach (var kv in data.Map)
                     {
-                        var tag = prop.GetValue(data.Placeholders) as string;
-                        if (tag == null) continue;
-
-                        var value = typeof(Placeholders).InvokeMember(prop.Name.Replace("Tag", "Value"),
-                            BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.Public, null, data.Placeholders, null) as String;
-                        value = value ?? String.Empty;
-
+                           
                         var elements = theDoc.MainDocumentPart.Document.Body.Descendants<SdtElement>()
-                           .Where(sdt => sdt.SdtProperties.GetFirstChild<Tag>()?.Val == tag);
+                           .Where(sdt => sdt.SdtProperties.GetFirstChild<Tag>()?.Val == kv.Key);
 
                         foreach (var element in elements)
                         {
                             if (element != null)
                             {
-                                log.LogInformation(String.Format("Placeholder '{0}' was found and will be replaced.", value));
+                                log.LogInformation(String.Format("Placeholder '{0}' was found and will be replaced.", kv.Value));
 
                                 element.Descendants<Run>().Skip(1).ToList().ForEach(r => r.Remove());
 
                                 var run = element.Descendants<Run>().FirstOrDefault();
                                 run.Descendants().ToList().ForEach(e => { if (e is Text) e.Remove(); });
 
-                                var lines = value.Split('\n');
+                                var lines = kv.Value.ToString().Split('\n');
 
                                 for (int i = 0; i < lines.Length; i++)
                                 {
@@ -83,7 +90,7 @@ namespace Ltwlf.Functions.Word
                             }
                             else
                             {
-                                log.LogInformation(String.Format("Placeholder '{0}' was not found.", tag));
+                                log.LogInformation(String.Format("Placeholder '{0}' was not found.", kv.Key));
                             }
                         }
                     }
@@ -96,7 +103,7 @@ namespace Ltwlf.Functions.Word
                     wordAsBase64 = Convert.ToBase64String(stream.ToArray());
                 }
 
-                return req.CreateResponse(HttpStatusCode.OK, wordAsBase64);
+                return new OkObjectResult(wordAsBase64);
             }
         }
     }

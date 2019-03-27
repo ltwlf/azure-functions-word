@@ -29,7 +29,7 @@ namespace Ltwlf.Functions.Word
     {
 
         [FunctionName("GetPlaceholders")]
-        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequest req, ILogger log)
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequest req, ILogger log)
         {
             log.LogInformation("ProcessWordTemplate function is processing a request...");
 
