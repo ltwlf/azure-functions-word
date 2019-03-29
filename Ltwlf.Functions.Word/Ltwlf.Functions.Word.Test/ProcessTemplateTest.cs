@@ -23,20 +23,31 @@ namespace Ltwlf.Functions.Word.Test
             _testOutputHelper = testOutputHelper;
         }
 
-
         [Fact]
         public async void Should_Return_OK()
-        {
-            
+        {   
             var wordAsBase64 = Convert.ToBase64String(await File.ReadAllBytesAsync("test.docx"));
-
             var inputJson = $@"
             {{
-                ""file"":""{wordAsBase64}"",
-                ""map"": {{
+                ""document"":""{wordAsBase64}"",
+                ""data"": {{
                     ""Company"":""Hololux"",
                     ""Street"":""Europaallee 27d"",
                     ""City"":""Saarbruecken"",
+                    ""Items"":[
+                        {{
+                            ""Article"":""4711"",
+                            ""Quantity"":""2"",
+                            ""Price"":""5"",
+                            ""Sum"":""10""
+                        }},
+                        {{
+                            ""Article"":""4712"",
+                            ""Quantity"":""1"",
+                            ""Price"":8,
+                            ""Sum"":8
+                        }}
+                    ]
                 }}
             }}";
 
@@ -47,7 +58,7 @@ namespace Ltwlf.Functions.Word.Test
 
             var logger = NullLoggerFactory.Instance.CreateLogger("Null Logger");
 
-            var response = await ProcessWordTemplate.Run(request, logger);
+            var response = await ProcessTemplate.Run(request, logger);
 
             Assert.IsType<OkObjectResult>(response);
 

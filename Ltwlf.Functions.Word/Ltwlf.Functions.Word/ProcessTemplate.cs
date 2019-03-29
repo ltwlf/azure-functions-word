@@ -16,6 +16,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
+using DocumentFormat.OpenXml.Office2013.Word;
 
 namespace Ltwlf.Functions.Word
 {
@@ -23,15 +25,15 @@ namespace Ltwlf.Functions.Word
     [JsonObject]
     public class ProcessTemplateMessage
     {
-        [JsonProperty(PropertyName = "file")]
+        [JsonProperty(PropertyName = "document")]
         public string WordAsBase64 { get; set; }
 
-        [JsonProperty(PropertyName = "map")]
-        public Dictionary<string, object> Map { get; set; }
+        [JsonProperty(PropertyName = "data")]
+        public Dictionary<string, object> Data { get; set; }
     }
 
 
-    public static class ProcessWordTemplate
+    public static class ProcessTemplate
     {
 
         [FunctionName("ProcessTemplate")]
@@ -41,14 +43,13 @@ namespace Ltwlf.Functions.Word
 
             string wordAsBase64 = String.Empty;
             byte[] wordAsBinary = null;
-            ProcessTemplateMessage data = null;
+            ProcessTemplateMessage body = null;
 
             try
             {
                 var json = await req.ReadAsStringAsync();
-                data = JsonConvert.DeserializeObject<ProcessTemplateMessage>(json);
-                wordAsBinary = Convert.FromBase64String(data.WordAsBase64);
-
+                body = JsonConvert.DeserializeObject<ProcessTemplateMessage>(json);
+                wordAsBinary = Convert.FromBase64String(body.WordAsBase64);
             }
             catch (Exception ex)
             {
@@ -60,9 +61,13 @@ namespace Ltwlf.Functions.Word
             {
                 using (WordprocessingDocument theDoc = WordprocessingDocument.Open(stream, true))
                 {
-                    foreach (var kv in data.Map)
-                    {
-                           
+
+                    var contentControls = theDoc.MainDocumentPart.Document.Body.Descendants<SdtElement>();
+                    var simpleControls = contentControls.Where(sdt => sdt.SdtProperties.GetFirstChild<SdtRepeatedSection>() == null);
+                    var repeatedControls = contentControls.Where(sdt => sdt.SdtProperties.GetFirstChild<SdtRepeatedSection>() != null);
+
+                    foreach (var kv in body.Data.Where(x => x.Value is JArray == false))
+                    {         
                         var elements = theDoc.MainDocumentPart.Document.Body.Descendants<SdtElement>()
                            .Where(sdt => sdt.SdtProperties.GetFirstChild<Tag>()?.Val == kv.Key);
 
@@ -93,6 +98,46 @@ namespace Ltwlf.Functions.Word
                                 log.LogInformation(String.Format("Placeholder '{0}' was not found.", kv.Key));
                             }
                         }
+                    }
+
+                    foreach (var kv in body.Data.Where(x => x.Value is JArray == true))
+                    {
+                        var repeatedSection = repeatedControls.FirstOrDefault(sdt => sdt.SdtProperties.GetFirstChild<Tag>()?.Val == kv.Key);
+                        var repeatedItem = repeatedSection.GetFirstChild<SdtContentRow>();
+
+                        if (repeatedItem != null)
+                        {           
+                            foreach (var item in (kv.Value as JArray).Children<JObject>())
+                            {
+                                var copy = repeatedItem.CloneNode(true);
+
+                                foreach (var prop in item.Properties())
+                                {
+                                    var control = copy.Descendants<SdtElement>().FirstOrDefault(sdt => sdt.SdtProperties.GetFirstChild<Tag>()?.Val == prop.Name);
+                                    if(control!=null)
+                                    {
+                                        control.Descendants<Run>().Skip(1).ToList().ForEach(r => r.Remove());
+
+                                        var run = control.Descendants<Run>().FirstOrDefault();
+                                        run.Descendants().ToList().ForEach(e => { if (e is Text) e.Remove(); });
+
+                                        var lines = prop.Value.ToString().Split('\n');
+
+                                        for (int i = 0; i < lines.Length; i++)
+                                        {
+                                            run.Append(new Text(lines[i]));
+                                            if (i < lines.Length - 1)
+                                            {
+                                                run.Append(new Break());
+                                            }
+                                        }
+                                    }
+                                }
+                                repeatedSection.AppendChild(copy);
+                            }
+                            
+                        }
+                        repeatedItem.Remove();
                     }
 
                     theDoc.MainDocumentPart.Document.Save();
