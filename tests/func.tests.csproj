@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ltwlf.Functions.Word\Ltwlf.Functions.Word.csproj" />
+    <ProjectReference Include="..\src\func.csproj" />
   </ItemGroup>
 
 </Project>

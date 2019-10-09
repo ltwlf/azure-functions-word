@@ -1,6 +1,5 @@
 {
   "swagger": "2.0",
-  "host": "ltwlf-functions-word.azurewebsites.net",
   "basePath": "/api",
   "info": {
     "title": "Advanced Word Template Generator",
